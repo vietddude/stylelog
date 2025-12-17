@@ -1,4 +1,4 @@
-package slogx
+package stylelog
 
 import (
 	"context"

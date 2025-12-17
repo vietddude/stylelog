@@ -1,4 +1,4 @@
-package slogx
+package stylelog
 
 import (
 	"context"
@@ -50,7 +50,7 @@ func (h *LevelBasedHandler) WithGroup(name string) slog.Handler {
 // - optionally applies the provided tint.Options (if any) to both handlers
 //
 // If opts is provided, the first element is used as the base options for both
-// handlers. The following fields are still controlled by slogx:
+// handlers. The following fields are still controlled by stylelog:
 //   - low-level handler:  AddSource is forced to false
 //   - error handler:      AddSource is forced to true and its ReplaceAttr is
 //     wrapped to also color "err"/"error" attributes red.

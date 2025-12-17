@@ -1,4 +1,4 @@
-module github.com/vietddude/slogx
+module github.com/vietddude/stylelog
 
 go 1.25.4
 

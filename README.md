@@ -1,4 +1,4 @@
-# slogx
+# stylelog
 
 Lightweight `log/slog` helper that:
 
@@ -7,12 +7,12 @@ Lightweight `log/slog` helper that:
 - highlights error attributes using [`tint`](https://github.com/lmittmann/tint)
 - optionally sets the logger as the global default, so other packages can just use `slog.*`
 
-![slogx demo](./slogx-demo.png)
+![stylelog demo](./stylelog-demo.png)
 
 ## Install
 
 ```bash
-go get github.com/vietddude/slogx
+go get github.com/vietddude/stylelog
 ```
 
 ## Usage
@@ -25,12 +25,12 @@ package main
 import (
 	"errors"
 
-	"github.com/vietddude/slogx"
+	"github.com/vietddude/stylelog"
 )
 
 func main() {
 	// Create and register the default logger using built-in options.
-	log := slogx.InitDefault()
+	log := stylelog.InitDefault()
 
 	log.Debug("Debug message", "detail", "something")
 	log.Info("User login", "user", "alice", "ip", "127.0.0.1")
@@ -66,12 +66,12 @@ import (
 	"log/slog"
 
 	"github.com/lmittmann/tint"
-	"github.com/vietddude/slogx"
+	"github.com/vietddude/stylelog"
 )
 
 func main() {
 	// Only log Warn and above
-	log := slogx.InitDefault(&tint.Options{
+	log := stylelog.InitDefault(&tint.Options{
 		Level: slog.LevelWarn,
 	})
 
@@ -85,7 +85,7 @@ func main() {
 ### Customizing `tint.Options`
 
 You can pass your own [`tint.Options`](https://pkg.go.dev/github.com/lmittmann/tint#Options) to `New` or `InitDefault`.  
-`slogx` will:
+`stylelog` will:
 
 - always disable `AddSource` for low-level logs (Info/Debug/Warn)
 - always enable `AddSource` for error logs
@@ -99,7 +99,7 @@ import (
 	"time"
 
 	"github.com/lmittmann/tint"
-	"github.com/vietddude/slogx"
+	"github.com/vietddude/stylelog"
 )
 
 func main() {
@@ -116,7 +116,7 @@ func main() {
 		},
 	}
 
-	logger := slogx.New(opts)
+	logger := stylelog.New(opts)
 	slog.SetDefault(logger)
 
 	slog.Info("Processing request", "user_id", 123)
@@ -135,12 +135,12 @@ import (
 	"log/slog"
 
 	"github.com/lmittmann/tint"
-	"github.com/vietddude/slogx"
+	"github.com/vietddude/stylelog"
 )
 
 func main() {
 	// Create logger without setting it as default
-	logger := slogx.New(&tint.Options{
+	logger := stylelog.New(&tint.Options{
 		Level:   slog.LevelInfo,
 		NoColor: true, // Disable colors for production logs
 	})
