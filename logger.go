@@ -17,7 +17,10 @@ type LevelBasedHandler struct {
 }
 
 func (h *LevelBasedHandler) Enabled(ctx context.Context, level slog.Level) bool {
-	return true
+	if level >= slog.LevelError {
+		return h.ErrorHandler.Enabled(ctx, level)
+	}
+	return h.LowLevelHandler.Enabled(ctx, level)
 }
 
 func (h *LevelBasedHandler) Handle(ctx context.Context, r slog.Record) error {
@@ -44,21 +47,41 @@ func (h *LevelBasedHandler) WithGroup(name string) slog.Handler {
 // New returns a slog.Logger that:
 // - uses a tint handler without source for Info/Debug/Warn
 // - uses a tint handler with source (and red-colored "err"/"error" fields) for Error+
-func New() *slog.Logger {
-	lowLevelHandler := tint.NewHandler(os.Stderr, &tint.Options{
-		AddSource: false,
-	})
+// - optionally applies the provided tint.Options (if any) to both handlers
+//
+// If opts is provided, the first element is used as the base options for both
+// handlers. The following fields are still controlled by slogx:
+//   - low-level handler:  AddSource is forced to false
+//   - error handler:      AddSource is forced to true and its ReplaceAttr is
+//     wrapped to also color "err"/"error" attributes red.
+func New(opts ...*tint.Options) *slog.Logger {
+	// Start from zero-value options, or from the user-provided base options.
+	var baseOpts tint.Options
+	if len(opts) > 0 && opts[0] != nil {
+		baseOpts = *opts[0]
+	}
 
-	errorHandler := tint.NewHandler(os.Stderr, &tint.Options{
-		AddSource: true,
-		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
-			// Color errors red
-			if a.Key == "err" || a.Key == "error" {
-				a = tint.Attr(9, a)
-			}
-			return a
-		},
-	})
+	// Low-level handler: same as base, but without source.
+	lowOpts := baseOpts
+	lowOpts.AddSource = false
+	lowLevelHandler := tint.NewHandler(os.Stderr, &lowOpts)
+
+	// Error handler: same as base, but with source and enhanced ReplaceAttr.
+	errOpts := baseOpts
+	errOpts.AddSource = true
+	userReplace := errOpts.ReplaceAttr
+	errOpts.ReplaceAttr = func(groups []string, a slog.Attr) slog.Attr {
+		// Let the user-supplied ReplaceAttr run first, if present.
+		if userReplace != nil {
+			a = userReplace(groups, a)
+		}
+		// Then color errors red.
+		if a.Key == "err" || a.Key == "error" {
+			a = tint.Attr(9, a)
+		}
+		return a
+	}
+	errorHandler := tint.NewHandler(os.Stderr, &errOpts)
 
 	return slog.New(&LevelBasedHandler{
 		LowLevelHandler: lowLevelHandler,
@@ -68,8 +91,8 @@ func New() *slog.Logger {
 
 // InitDefault creates the logger from New, sets it as slog's default,
 // and returns it for direct use.
-func InitDefault() *slog.Logger {
-	logger := New()
+func InitDefault(opts ...*tint.Options) *slog.Logger {
+	logger := New(opts...)
 	slog.SetDefault(logger)
 	return logger
 }
